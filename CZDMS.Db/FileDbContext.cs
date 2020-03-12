@@ -28,6 +28,7 @@ namespace CZDMS.Db
 
             modelBuilder.Entity<FileItem>(entity => {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.Key);
                 entity.Property(e => e.Gcrecord);
                 entity.Property(e => e.IsFolder).HasDefaultValueSql("((0))");
                 entity.Property(e => e.LastWriteTime);

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CZDMS.Db\CZDMS.Db.csproj" />
+    <ProjectReference Include="..\CZDMS.Models\CZDMS.Models.csproj" />
+    <PackageReference Include="DevExtreme.AspNet.Core" Version="19.2.6" />
+  </ItemGroup>
+  
+</Project>

@@ -36,7 +36,7 @@ namespace CZDMS.Web
                 options.EnableSensitiveDataLogging();
             });
 
-            services.AddControllersWithViews();
+            services.AddControllersWithViews().AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
