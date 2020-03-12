@@ -4,6 +4,7 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule, routedComponents } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { InjectionModule } from './shared/injection/injection.module';
+import { logInterceptProviders } from './interceptors/log.interceptor';
 
 @NgModule({
   declarations: [
@@ -15,7 +16,9 @@ import { InjectionModule } from './shared/injection/injection.module';
     AppRoutingModule,
     InjectionModule.forRoot(),
   ],
-  providers: [],
+  providers: [
+    logInterceptProviders
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
