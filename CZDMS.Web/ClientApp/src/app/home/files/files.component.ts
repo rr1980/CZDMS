@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import CustomFileProvider from 'devextreme/ui/file_manager/file_provider/custom';
 import { fileItems, PathInfo } from './file.items';
-import RemoteFileProvider from 'devextreme/ui/file_manager/file_provider/remote';
+// import RemoteFileProvider from 'devextreme/ui/file_manager/file_provider/remote';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 
