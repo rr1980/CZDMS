@@ -1,0 +1,15 @@
+<dx-toolbar>
+    <dxi-item location="before" widget="dxTabs" [options]="tabOptions">
+    </dxi-item>
+
+    <dxi-item location="center" widget="dxButton" locateInMenu="never">
+        <div *dxTemplate>
+            <div class='toolbar-label'><b>CZDMS</b></div>
+        </div>
+    </dxi-item>
+
+    <dxi-item widget="dxButton" locateInMenu="always" [options]="logoutButtonOptions">
+    </dxi-item>
+</dx-toolbar>
+
+<router-outlet></router-outlet>

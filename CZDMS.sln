@@ -3,7 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29905.134
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CZDMS.Web", "CZDMS.Web\CZDMS.Web.csproj", "{DF377921-175F-4FD9-9F90-22CAEACD7C4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CZDMS.Web", "CZDMS.Web\CZDMS.Web.csproj", "{DF377921-175F-4FD9-9F90-22CAEACD7C4A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CZDMS.Db", "CZDMS.Db\CZDMS.Db.csproj", "{59ACC8EC-A514-4D1E-86F4-D3AB5041C1F3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DevExtreme NuGet.config", "DevExtreme NuGet.config", "{931A1C84-EDBB-4934-BD58-44E220816A87}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet.config = NuGet.config
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CZDMS.Services", "CZDMS.Services\CZDMS.Services.csproj", "{5A8A53A2-BC5F-49D3-840E-3F8EB81A9E7E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CZDMS.Models", "CZDMS.Models\CZDMS.Models.csproj", "{FC4F75E4-EDBA-42DF-99CB-B2E59A194704}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +26,18 @@ Global
 		{DF377921-175F-4FD9-9F90-22CAEACD7C4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF377921-175F-4FD9-9F90-22CAEACD7C4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF377921-175F-4FD9-9F90-22CAEACD7C4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59ACC8EC-A514-4D1E-86F4-D3AB5041C1F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59ACC8EC-A514-4D1E-86F4-D3AB5041C1F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59ACC8EC-A514-4D1E-86F4-D3AB5041C1F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59ACC8EC-A514-4D1E-86F4-D3AB5041C1F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A8A53A2-BC5F-49D3-840E-3F8EB81A9E7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A8A53A2-BC5F-49D3-840E-3F8EB81A9E7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A8A53A2-BC5F-49D3-840E-3F8EB81A9E7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A8A53A2-BC5F-49D3-840E-3F8EB81A9E7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC4F75E4-EDBA-42DF-99CB-B2E59A194704}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC4F75E4-EDBA-42DF-99CB-B2E59A194704}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC4F75E4-EDBA-42DF-99CB-B2E59A194704}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC4F75E4-EDBA-42DF-99CB-B2E59A194704}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
