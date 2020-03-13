@@ -5,6 +5,7 @@ import { AppRoutingModule, routedComponents } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { InjectionModule } from './shared/injection/injection.module';
 import { logInterceptProviders } from './interceptors/log.interceptor';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -14,6 +15,7 @@ import { logInterceptProviders } from './interceptors/log.interceptor';
   imports: [
     BrowserModule,
     AppRoutingModule,
+    HttpClientModule,
     InjectionModule.forRoot(),
   ],
   providers: [

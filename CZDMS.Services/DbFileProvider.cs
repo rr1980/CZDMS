@@ -2,6 +2,7 @@
 using CZDMS.Db.Entities;
 using CZDMS.Models;
 using DevExtreme.AspNet.Mvc.FileManagement;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +12,7 @@ using System.Security;
 
 namespace CZDMS.Services
 {
-    public class DbFileProvider : IFileProvider
+    public class DbFileProvider 
     {
         const int DbRootItemId = -1;
         static readonly char[] PossibleDirectorySeparators = { '\\', '/' };
@@ -21,10 +22,10 @@ namespace CZDMS.Services
             DataContext = _context;
         }
 
-        public void Copy(FileItemPathInfo sourceKey, FileItemPathInfo destinationKey)
+        public void Copy(FileItemIdentifier<string> sourceKey, FileItemIdentifier<string> destinationKey)
         {
-            FileItem sourceItem = GetDbItemByFileKey(sourceKey.GetFileItemKey<string>());
-            FileItem targetItem = GetDbItemByFileKey(Path.GetDirectoryName(destinationKey.GetFileItemKey<string>()));
+            FileItem sourceItem = GetDbItemByFileKey(sourceKey.Key);
+            FileItem targetItem = GetDbItemByFileKey(destinationKey.Key);
             if (targetItem.Id == sourceItem.ParentId)
                 throw new SecurityException("You can't copy to the same folder.");
             List<FileItem> childItems = DataContext.FileItems.Where(p => p.ParentId == targetItem.Id).ToList();
@@ -33,9 +34,9 @@ namespace CZDMS.Services
             CopyFolderInternal(sourceItem, targetItem);
         }
 
-        public void CreateDirectory(FileItemPathInfo rootKey, string name)
+        public void CreateDirectory(FileItemIdentifier<string> rootKey, string name)
         {
-            FileItem parentItem = GetDbItemByFileKey(rootKey.GetFileItemKey<string>());
+            FileItem parentItem = GetDbItemByFileKey(rootKey.Key);
             FileItem newFolderItem = new FileItem
             {
                 Name = name,
@@ -47,9 +48,9 @@ namespace CZDMS.Services
             DataContext.SaveChanges();
         }
 
-        public IList<IClientFileSystemItem> GetDirectoryContents(FileItemPathInfo dirKey)
+        public IList<IClientFileSystemItem> GetDirectoryContents(FileItemIdentifier<string> dirKey)
         {
-            FileItem parent = GetDbItemByFileKey(dirKey.GetFileItemKey<string>());
+            FileItem parent = GetDbItemByFileKey(dirKey.Key);
             if (parent != null)
             {
                 return DataContext.FileItems
@@ -63,10 +64,10 @@ namespace CZDMS.Services
             }
         }
 
-        public void Move(FileItemPathInfo sourceKey, FileItemPathInfo destinationKey)
+        public void Move(FileItemIdentifier<string> sourceKey, FileItemIdentifier<string> destinationKey)
         {
-            FileItem sourceItem = GetDbItemByFileKey(sourceKey.GetFileItemKey<string>());
-            FileItem targetItem = GetDbItemByFileKey(Path.GetDirectoryName(destinationKey.GetFileItemKey<string>()));
+            FileItem sourceItem = GetDbItemByFileKey(sourceKey.Key);
+            FileItem targetItem = GetDbItemByFileKey(destinationKey.Key);
             if (targetItem.Id == sourceItem.ParentId)
                 throw new SecurityException("You can't copy to the same folder.");
             List<FileItem> childItems = DataContext.FileItems.Where(p => p.ParentId == targetItem.Id).ToList();
@@ -105,19 +106,18 @@ namespace CZDMS.Services
             return sr.BaseStream;
         }
 
-        public void MoveUploadedFile(FileInfo file, string destinationKey)
+        public void MoveUploadedFile(IFormFile file, string destinationKey)
         {
-            string itemName = Path.GetFileName(destinationKey);
             byte[] data = new byte[file.Length];
-            using (FileStream fs = file.OpenRead())
+            using (Stream fs = file.OpenReadStream())
             {
                 fs.Read(data, 0, data.Length);
             }
-            file.Delete();
-            FileItem parentItem = GetDbItemByFileKey(Path.GetDirectoryName(destinationKey));
+
+            FileItem parentItem = GetDbItemByFileKey(destinationKey);
             FileItem item = new FileItem
             {
-                Name = itemName,
+                Name = file.FileName,
                 ParentId = parentItem.Id,
                 Data = data,
                 IsFolder = false,
@@ -127,9 +127,9 @@ namespace CZDMS.Services
             DataContext.SaveChanges();
         }
 
-        public void Remove(FileItemPathInfo key)
+        public void Remove(FileItemIdentifier<string> key)
         {
-            FileItem item = GetDbItemByFileKey(key.GetFileItemKey<string>());
+            FileItem item = GetDbItemByFileKey(key.Key);
             if (item.Id == DbRootItemId)
                 throw new SecurityException("You can't delete the root folder.");
             RemoveInternal(item);
@@ -217,8 +217,15 @@ namespace CZDMS.Services
                   (childItem, parentItem) => childItem).
                  Where(item => item.Name == itemName);
             }
-            return query.FirstOrDefault();
 
+            var result = query.FirstOrDefault();
+
+            if(result == null)
+            {
+                result = DataContext.FileItems.Where(p => p.ParentId == DbRootItemId).FirstOrDefault();
+            }
+
+            return result;
         }
 
         DbFileSystemItem CreateDbFileSystemItem(FileItem dbItem)
