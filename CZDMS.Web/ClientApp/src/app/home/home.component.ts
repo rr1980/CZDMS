@@ -1,104 +1,54 @@
-import { Component, OnInit } from '@angular/core';
-import CustomFileProvider from 'devextreme/ui/file_manager/file_provider/custom';
-import { fileItems, PathInfo } from './file.items';
-import RemoteFileProvider from 'devextreme/ui/file_manager/file_provider/remote';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { tap } from 'rxjs/operators';
-import { AuthService } from '../shared/services/auth.service';
+import { Component } from '@angular/core';
 
+import { AuthService } from '../shared/services/auth.service';
+import { Router } from '@angular/router';
+
+export class Tab {
+  text: string;
+  icon: string;
+  path: string;
+}
+
+const tabs: Tab[] = [
+  {
+    text: "Files",
+    icon: "activefolder",
+    path: "/home/files"
+  },
+  {
+    text: "find",
+    icon: "find",
+    path: "/home/find"
+  }
+];
 
 @Component({
   selector: 'czdms-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent {
 
+  tabOptions: any;
+  logoutButtonOptions: any;
 
-  allowedFileExtensions: string[] = [".pdf"];
-  fileProvider: CustomFileProvider;
+  constructor(private authService: AuthService, public router: Router) {
+    const currentRoute = tabs.find(x=> x.path === this.router.url);
+    const activeTabIndex = tabs.indexOf(currentRoute);
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+    this.tabOptions = {
+      dataSource: tabs,
+      selectedIndex: activeTabIndex,
+      onItemClick: (e) => {
+        this.router.navigate([e.itemData.path]);
+      }
+    };
 
-  ngOnInit(): void {
-    this.setup();
+    this.logoutButtonOptions = {
+      text: "Logout",
+      onClick: () => {
+        this.authService.logout();
+      }
+    };
   }
-
-  onClickLogout(){
-    this.authService.logout()
-  }
-
-  setup() {
-    // this.fileProvider = new RemoteFileProvider({
-    //   endpointUrl: "https://localhost:44351/api/DatabaseApi"
-    // });
-
-
-    this.fileProvider = new CustomFileProvider({
-      getItems: (pathInfo: PathInfo[]) => {
-        // console.debug('getItems', pathInfo);
-
-        if (!pathInfo.length) {
-          pathInfo.push({
-            key: "\\",
-            name: "RR1980"
-          });
-        }
-
-        return this.http.post('https://localhost:44351/api/DatabaseApi/GetItems', pathInfo, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-          .pipe(tap(val => console.debug('getItems', val)))
-          .toPromise();
-      },
-      renameItem: (item, name) => {
-        console.debug('renameItem', item, name);
-      },
-      createDirectory: (parentDir, name) => {
-        return this.http.post('https://localhost:44351/api/DatabaseApi/CreateDirectory', { parentDir, name }, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-          .pipe(tap(val => console.debug('createDirectory', val)))
-          .toPromise();
-      },
-      deleteItem: (item) => {
-        return this.http.post('https://localhost:44351/api/DatabaseApi/DeleteItem', item, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-          .pipe(tap(val => console.debug('deleteItem', val)))
-          .toPromise();
-      },
-      moveItem: (item, destinationDir) => {
-        return this.http.post('https://localhost:44351/api/DatabaseApi/MoveItem', { item, destinationDir }, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-          .pipe(tap(val => console.debug('moveItem', val)))
-          .toPromise();
-      },
-      copyItem: (item, destinationDir) => {
-        return this.http.post('https://localhost:44351/api/DatabaseApi/CopyItem', { item, destinationDir }, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-          .pipe(tap(val => console.debug('copyItem', val)))
-          .toPromise();
-      },
-      uploadFileChunk: (fileData, chunksInfo, destinationDir) => {
-        const formData: FormData = new FormData();
-        formData.append('file', fileData, fileData.name);
-        formData.append('destinationDir', destinationDir.key.toString());
-
-        return this.http.post('https://localhost:44351/api/DatabaseApi/UploadFileChunk', formData)
-          .pipe(tap(val => console.debug('uploadFileChunk', val)))
-          .toPromise();
-      },
-      abortFileUpload: (fileData, chunksInfo, destinationDir) => {
-        console.debug('abortFileUpload', fileData, chunksInfo, destinationDir);
-      },
-      uploadChunkSize: 1048576000
-    });
-  }
-
-  getItems(pathInfo: any[]) {
-    const requestPathInfo = pathInfo[pathInfo.length - 1];
-    const parts = requestPathInfo.key.split('/');
-
-    let items = fileItems;
-    for (let index = 0; index < parts.length; index++) {
-      const part = parts[index];
-      items = items.find(x => x.name === part).items;
-    }
-
-    return items;
-  }
-
 }

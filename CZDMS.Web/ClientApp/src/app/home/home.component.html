@@ -1,8 +1,15 @@
-<button (click)="onClickLogout()">Logout</button>
-<dx-file-manager id="fileManager" [fileProvider]="fileProvider" currentPath="RR1980">
+<dx-toolbar>
+    <dxi-item location="before" widget="dxTabs" [options]="tabOptions">
+    </dxi-item>
 
-  <dxo-permissions create="true" copy="true" move="true" remove="true" rename="true" upload="true" download="true">
-  </dxo-permissions>
-</dx-file-manager>
+    <dxi-item location="center" widget="dxButton" locateInMenu="never">
+        <div *dxTemplate>
+            <div class='toolbar-label'><b>CZDMS</b></div>
+        </div>
+    </dxi-item>
+
+    <dxi-item widget="dxButton" locateInMenu="always" [options]="logoutButtonOptions">
+    </dxi-item>
+</dx-toolbar>
 
 <router-outlet></router-outlet>

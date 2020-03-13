@@ -1,10 +1,23 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { HomeComponent } from './home.component';
+import { FilesComponent } from './files/files.component';
+import { FindComponent } from './find/find.component';
 
 
 const routes: Routes = [
-  { path: '', pathMatch: 'full', component: HomeComponent },
+  {
+    path: '', component: HomeComponent, children: [
+      { path: '', pathMatch: 'full' , redirectTo: 'files' },
+      {
+        path: 'files', component: FilesComponent
+      },
+      {
+        path: 'find', component: FindComponent
+      },
+      { path: '**', redirectTo: '' }
+    ]
+  },
   { path: '**', redirectTo: '' }
 ];
 
@@ -15,4 +28,4 @@ const routes: Routes = [
 export class HomeRoutingModule { }
 
 
-export const routedComponents = [HomeComponent]
+export const routedComponents = [HomeComponent, FilesComponent, FindComponent]
