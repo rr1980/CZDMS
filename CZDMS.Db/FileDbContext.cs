@@ -16,18 +16,24 @@ namespace CZDMS.Db
             }
         }
 
+        public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<FileItem> FileItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
-            modelBuilder.Entity<FileItem>(entity =>
+            modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(x => x.Id);
+                entity.Property(e => e.Id);
+                entity.Property(e => e.Name).HasMaxLength(100);
+                entity.Property(e => e.Vorname).HasMaxLength(100);
+                entity.Property(e => e.Username).HasMaxLength(100);
+                entity.Property(e => e.Password);
             });
 
             modelBuilder.Entity<FileItem>(entity => {
-                entity.HasKey(e => e.Id);
+                entity.HasKey(x => x.Id);
+                entity.Property(e => e.Id);
                 entity.Property(e => e.Key);
                 entity.Property(e => e.Gcrecord);
                 entity.Property(e => e.IsFolder).HasDefaultValueSql("((0))");
