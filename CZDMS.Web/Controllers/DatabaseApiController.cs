@@ -66,7 +66,7 @@ namespace CZDMS.Web.Controllers
         [Route("GetItems")]
         public IList<IClientFileSystemItem> GetItems([FromBody]FileItemIdentifier<string>[] pathInfos)
         {
-            var result = dbFileProvider.GetDirectoryContents(UserId, pathInfos.LastOrDefault());
+            var result = dbFileProvider.GetDirectoryContents(UserId, pathInfos.LastOrDefault()?.Key);
 
             return result;
         }
@@ -75,7 +75,7 @@ namespace CZDMS.Web.Controllers
         [Route("CreateDirectory")]
         public void CreateDirectory([FromBody]CreateDirectoryRequest createDirectoryRequest)
         {
-            dbFileProvider.CreateDirectory(UserId, createDirectoryRequest.ParentDir, createDirectoryRequest.Name);
+            dbFileProvider.CreateDirectory(UserId, createDirectoryRequest.ParentDir?.Key, createDirectoryRequest.Name);
         }
 
         [HttpPost]
@@ -89,14 +89,14 @@ namespace CZDMS.Web.Controllers
         [Route("MoveItem")]
         public void MoveItem([FromBody]MoveItemRequest moveItemRequest)
         {
-            dbFileProvider.Move(UserId, moveItemRequest.Item, moveItemRequest.DestinationDir);
+            dbFileProvider.Move(UserId, moveItemRequest.Item?.Key, moveItemRequest.DestinationDir?.Key);
         }
 
         [HttpPost]
         [Route("CopyItem")]
         public void CopyItem([FromBody]MoveItemRequest moveItemRequest)
         {
-            dbFileProvider.Copy(UserId, moveItemRequest.Item, moveItemRequest.DestinationDir);
+            dbFileProvider.Copy(UserId, moveItemRequest.Item?.Key, moveItemRequest.DestinationDir?.Key);
         }
 
         [HttpPost]
