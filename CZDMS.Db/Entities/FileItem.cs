@@ -6,7 +6,7 @@ namespace CZDMS.Db.Entities
 {
     public abstract class BaseEntity
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
     }
 
     public partial class User : BaseEntity
@@ -26,11 +26,11 @@ namespace CZDMS.Db.Entities
         public DateTime? LastWriteTime { get; set; }
         public string Name { get; set; }
         public string Key { get; set; }
-        public int? ParentId { get; set; }
+        public long? ParentId { get; set; }
         public bool? IsFolder { get; set; }
         public byte[] Data { get; set; }
-        public int? OptimisticLockField { get; set; }
-        public int? Gcrecord { get; set; }
         public byte[] SsmaTimeStamp { get; set; }
+
+        public long OwnerId { get; set; }
     }
 }

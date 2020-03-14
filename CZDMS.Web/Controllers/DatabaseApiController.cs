@@ -2,12 +2,15 @@
 using CZDMS.Models;
 using CZDMS.Services;
 using DevExtreme.AspNet.Mvc.FileManagement;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace CZDMS.Web.Controllers
@@ -24,9 +27,25 @@ namespace CZDMS.Web.Controllers
         public FileItemIdentifier<string> ParentDir { get; set; }
     }
 
+    [Authorize]
     [Route("api/[controller]")]
     public class DatabaseApiController : Controller
     {
+        public long UserId
+        {
+            get
+            {
+                var _uId = User.FindFirstValue("Id");
+                var uId = long.Parse(_uId);
+                if (uId == 0)
+                {
+                    throw new Exception("UserID not Found!");
+                }
+
+                return uId;
+            }
+        }
+
         public DbFileProvider dbFileProvider
         {
             get
@@ -47,7 +66,7 @@ namespace CZDMS.Web.Controllers
         [Route("GetItems")]
         public IList<IClientFileSystemItem> GetItems([FromBody]FileItemIdentifier<string>[] pathInfos)
         {
-            var result = dbFileProvider.GetDirectoryContents(pathInfos.LastOrDefault());
+            var result = dbFileProvider.GetDirectoryContents(UserId, pathInfos.LastOrDefault());
 
             return result;
         }
@@ -56,28 +75,28 @@ namespace CZDMS.Web.Controllers
         [Route("CreateDirectory")]
         public void CreateDirectory([FromBody]CreateDirectoryRequest createDirectoryRequest)
         {
-            dbFileProvider.CreateDirectory(createDirectoryRequest.ParentDir, createDirectoryRequest.Name);
+            dbFileProvider.CreateDirectory(UserId, createDirectoryRequest.ParentDir, createDirectoryRequest.Name);
         }
 
         [HttpPost]
         [Route("DeleteItem")]
         public void DeleteItem([FromBody]FileItemIdentifier<string> pathInfo)
         {
-            dbFileProvider.Remove(pathInfo);
+            dbFileProvider.Remove(UserId, pathInfo);
         }
 
         [HttpPost]
         [Route("MoveItem")]
         public void MoveItem([FromBody]MoveItemRequest moveItemRequest)
         {
-            dbFileProvider.Move(moveItemRequest.Item, moveItemRequest.DestinationDir);
+            dbFileProvider.Move(UserId, moveItemRequest.Item, moveItemRequest.DestinationDir);
         }
 
         [HttpPost]
         [Route("CopyItem")]
         public void CopyItem([FromBody]MoveItemRequest moveItemRequest)
         {
-            dbFileProvider.Copy(moveItemRequest.Item, moveItemRequest.DestinationDir);
+            dbFileProvider.Copy(UserId, moveItemRequest.Item, moveItemRequest.DestinationDir);
         }
 
         [HttpPost]
@@ -87,7 +106,7 @@ namespace CZDMS.Web.Controllers
             var _files = Request.Form.Files;
             var destinationDir = Request.Form["destinationDir"][0];
 
-           dbFileProvider.MoveUploadedFile(_files[0], destinationDir);
+            dbFileProvider.MoveUploadedFile(UserId, _files[0], destinationDir);
         }
 
         //public IActionResult FileSystem(FileSystemCommand command, string arguments)

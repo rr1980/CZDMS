@@ -34,8 +34,8 @@ namespace CZDMS.Db
             modelBuilder.Entity<FileItem>(entity => {
                 entity.HasKey(x => x.Id);
                 entity.Property(e => e.Id);
+                entity.Property(e => e.OwnerId);
                 entity.Property(e => e.Key);
-                entity.Property(e => e.Gcrecord);
                 entity.Property(e => e.IsFolder).HasDefaultValueSql("((0))");
                 entity.Property(e => e.LastWriteTime);
                 entity.Property(e => e.Name).HasMaxLength(100);

@@ -21,16 +21,13 @@ namespace CZDMS.Db.Migrations
 
             modelBuilder.Entity("CZDMS.Db.Entities.FileItem", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<byte[]>("Data")
                         .HasColumnType("varbinary(max)");
-
-                    b.Property<int?>("Gcrecord")
-                        .HasColumnType("int");
 
                     b.Property<bool?>("IsFolder")
                         .ValueGeneratedOnAdd()
@@ -47,11 +44,11 @@ namespace CZDMS.Db.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasMaxLength(100);
 
-                    b.Property<int?>("OptimisticLockField")
-                        .HasColumnType("int");
+                    b.Property<long>("OwnerId")
+                        .HasColumnType("bigint");
 
-                    b.Property<int?>("ParentId")
-                        .HasColumnType("int");
+                    b.Property<long?>("ParentId")
+                        .HasColumnType("bigint");
 
                     b.Property<byte[]>("SsmaTimeStamp")
                         .IsConcurrencyToken()
@@ -67,9 +64,9 @@ namespace CZDMS.Db.Migrations
 
             modelBuilder.Entity("CZDMS.Db.Entities.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Name")
