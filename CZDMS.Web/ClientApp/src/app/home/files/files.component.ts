@@ -31,12 +31,12 @@ export class FilesComponent implements OnInit {
       getItems: (pathInfo: PathInfo[]) => {
         // console.debug('getItems', pathInfo);
 
-        if (!pathInfo.length) {
-          pathInfo.push({
-            key: "\\",
-            name: "RR1980"
-          });
-        }
+        // if (!pathInfo.length) {
+        //   pathInfo.push({
+        //     key: "\\",
+        //     name: null
+        //   });
+        // }
 
         return this.http.post('https://localhost:44351/api/DatabaseApi/GetItems', pathInfo, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
           .pipe(tap(val => console.debug('getItems', val)))

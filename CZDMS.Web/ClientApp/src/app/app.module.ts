@@ -5,6 +5,7 @@ import { AppRoutingModule, routedComponents } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { InjectionModule } from './shared/injection/injection.module';
 import { logInterceptProviders } from './shared/interceptors/log.interceptor';
+import { authInterceptProviders } from './shared/interceptors/auth.interceptor';
 
 import { HttpClientModule } from '@angular/common/http';
 
@@ -20,7 +21,8 @@ import { HttpClientModule } from '@angular/common/http';
       InjectionModule.forRoot(),
    ],
    providers: [
-      logInterceptProviders
+      logInterceptProviders,
+      authInterceptProviders
    ],
    bootstrap: [
       AppComponent

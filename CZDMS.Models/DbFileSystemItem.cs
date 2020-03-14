@@ -7,9 +7,9 @@ namespace CZDMS.Models
     public class DbFileSystemItem : IClientFileSystemItem
     {
 
-        public string Id { get; set; }
+        //public object Id { get; set; }
         public object Key { get; set; }
-        public int ParentId { get; set; }
+        public long ParentId { get; set; }
         public string Name { get; set; }
         public DateTime DateModified { get; set; }
         public bool IsDirectory { get; set; }
