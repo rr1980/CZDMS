@@ -75,7 +75,14 @@ namespace CZDMS.Web.Controllers
         [Route("CreateDirectory")]
         public void CreateDirectory([FromBody]CreateDirectoryRequest createDirectoryRequest)
         {
-            dbFileProvider.CreateDirectory(UserId, createDirectoryRequest.ParentDir?.Key, createDirectoryRequest.Name);
+            //try
+            //{
+                dbFileProvider.CreateDirectory(UserId, createDirectoryRequest.ParentDir?.Key, createDirectoryRequest.Name);
+            //}
+            //catch(Exception ex)
+            //{
+            //    return BadRequest(ex);
+            //}
         }
 
         [HttpPost]

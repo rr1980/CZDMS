@@ -8,6 +8,7 @@ import { logInterceptProviders } from './shared/interceptors/log.interceptor';
 import { authInterceptProviders } from './shared/interceptors/auth.interceptor';
 
 import { HttpClientModule } from '@angular/common/http';
+import { errorInterceptProviders } from './shared/interceptors/error.interceptor';
 
 @NgModule({
    declarations: [
@@ -22,6 +23,7 @@ import { HttpClientModule } from '@angular/common/http';
    ],
    providers: [
       logInterceptProviders,
+      errorInterceptProviders,
       authInterceptProviders
    ],
    bootstrap: [
