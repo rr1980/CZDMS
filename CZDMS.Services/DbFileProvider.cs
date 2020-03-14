@@ -21,24 +21,28 @@ namespace CZDMS.Services
             DataContext = _context;
         }
 
-        public void Copy(long uId, FileItemIdentifier<string> sourceKey, FileItemIdentifier<string> destinationKey)
+        public IList<IClientFileSystemItem> GetDirectoryContents(long uId, FileItemIdentifier<string> dirKey)
         {
-            FileItem sourceItem = GetDbItemByFileKey(uId, sourceKey.Key);
-            FileItem targetItem = GetDbItemByFileKey(uId, destinationKey.Key);
-            
-            if (targetItem.Id == sourceItem.ParentId)
+            FileItem parent = GetDbItemByFileKey(uId, dirKey?.Key);
+            if (parent != null)
             {
-                throw new SecurityException("You can't copy to the same folder.");
+                return DataContext.FileItems
+                    .Where(p => p.ParentId == parent.Id)
+                    .Select(CreateDbFileSystemItem)
+                    .ToList<IClientFileSystemItem>();
             }
-
-            List<FileItem> childItems = DataContext.FileItems.Where(p => p.ParentId == targetItem.Id).ToList();
-
-            if (childItems.Select(i => i.Name).Contains(sourceItem.Name))
+            else
             {
-                throw new SecurityException("The folder contains an item with the same name.");
-            }
+                if (dirKey == null)
+                {
+                    dirKey = new FileItemIdentifier<string>();
+                }
+                var user = DataContext.Users.First(p => p.Id == uId);
 
-            CopyFolderInternal(sourceItem, targetItem);
+                CreateDirectory(uId, dirKey, user.Username);
+
+                return GetDirectoryContents(uId, dirKey);
+            }
         }
 
         public void CreateDirectory(long uId, FileItemIdentifier<string> rootKey, string name)
@@ -57,28 +61,24 @@ namespace CZDMS.Services
             DataContext.SaveChanges();
         }
 
-        public IList<IClientFileSystemItem> GetDirectoryContents(long uId, FileItemIdentifier<string> dirKey)
+        public void Copy(long uId, FileItemIdentifier<string> sourceKey, FileItemIdentifier<string> destinationKey)
         {
-            FileItem parent = GetDbItemByFileKey(uId, dirKey?.Key);
-            if (parent != null)
-            {
-                return DataContext.FileItems
-                    .Where(p => p.ParentId == parent.Id)
-                    .Select(CreateDbFileSystemItem)
-                    .ToList<IClientFileSystemItem>();
-            }
-            else
-            {
-                if(dirKey== null)
-                {
-                    dirKey = new FileItemIdentifier<string>();
-                }
-                var user = DataContext.Users.First(p => p.Id == uId);
-                
-                CreateDirectory(uId, dirKey, user.Username);
+            FileItem sourceItem = GetDbItemByFileKey(uId, sourceKey.Key);
+            FileItem targetItem = GetDbItemByFileKey(uId, destinationKey.Key);
 
-                return GetDirectoryContents(uId, dirKey);
+            if (targetItem.Id == sourceItem.ParentId)
+            {
+                throw new SecurityException("You can't copy to the same folder.");
             }
+
+            List<FileItem> childItems = DataContext.FileItems.Where(p => p.ParentId == targetItem.Id).ToList();
+
+            if (childItems.Select(i => i.Name).Contains(sourceItem.Name))
+            {
+                throw new SecurityException("The folder contains an item with the same name.");
+            }
+
+            CopyFolderInternal(sourceItem, targetItem);
         }
 
         public void Move(long uId, FileItemIdentifier<string> sourceKey, FileItemIdentifier<string> destinationKey)
