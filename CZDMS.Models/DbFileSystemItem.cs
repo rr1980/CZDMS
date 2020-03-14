@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace CZDMS.Models
 {
-    public class DbFileSystemItem : IClientFileSystemItem
+    public class DbFileSystemItem
     {
 
         //public object Id { get; set; }

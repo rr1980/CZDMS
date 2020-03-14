@@ -17,14 +17,14 @@ namespace CZDMS.Web.Controllers
 {
     public class MoveItemRequest
     {
-        public FileItemIdentifier<string> Item { get; set; }
-        public FileItemIdentifier<string> DestinationDir { get; set; }
+        public FileSystemItem Item { get; set; }
+        public FileSystemItem DestinationDir { get; set; }
     }
 
     public class CreateDirectoryRequest
     {
         public string Name { get; set; }
-        public FileItemIdentifier<string> ParentDir { get; set; }
+        public FileSystemItem ParentDir { get; set; }
     }
 
     [Authorize]
@@ -64,9 +64,9 @@ namespace CZDMS.Web.Controllers
 
         [HttpPost]
         [Route("GetItems")]
-        public IList<IClientFileSystemItem> GetItems([FromBody]FileItemIdentifier<string>[] pathInfos)
+        public IList<DbFileSystemItem> GetItems([FromBody]FileSystemItem fileSystemItem)
         {
-            var result = dbFileProvider.GetDirectoryContents(UserId, pathInfos.LastOrDefault()?.Key);
+            var result = dbFileProvider.GetDirectoryContents(UserId, fileSystemItem?.Key);
 
             return result;
         }
@@ -87,9 +87,9 @@ namespace CZDMS.Web.Controllers
 
         [HttpPost]
         [Route("DeleteItem")]
-        public void DeleteItem([FromBody]FileItemIdentifier<string> pathInfo)
+        public void DeleteItem([FromBody]FileSystemItem pathInfo)
         {
-            dbFileProvider.Remove(UserId, pathInfo);
+            dbFileProvider.Remove(UserId, pathInfo.Key);
         }
 
         [HttpPost]

@@ -12,7 +12,7 @@ using System.Security;
 
 namespace CZDMS.Services
 {
-    public class DbFileProvider 
+    public class DbFileProvider
     {
         const int DbRootItemId = -1;
         FileDbContext DataContext { get; }
@@ -21,7 +21,7 @@ namespace CZDMS.Services
             DataContext = _context;
         }
 
-        public IList<IClientFileSystemItem> GetDirectoryContents(long uId, string dirKey)
+        public IList<DbFileSystemItem> GetDirectoryContents(long uId, string dirKey)
         {
             FileItem parent = null;
             if (string.IsNullOrEmpty(dirKey))
@@ -53,7 +53,7 @@ namespace CZDMS.Services
             return DataContext.FileItems
                  .Where(p => p.ParentId == parent.Id && (p.OwnerId == uId || p.OwnerId == null))
                  .Select(CreateDbFileSystemItem)
-                 .ToList<IClientFileSystemItem>();
+                 .ToList<DbFileSystemItem>();
         }
 
         public FileItem CreateDirectory(long uId, string rootKey, string name)
@@ -107,33 +107,34 @@ namespace CZDMS.Services
             DataContext.SaveChanges();
         }
 
-        public Stream GetFileContent(long uId, FileItemPathInfo pathInfo)
+        public Stream GetFileContent(long uId, string jey)
         {
-            FileItem sourceItem = GetDbItemByFileKey(uId, pathInfo.GetFileItemKey<string>());
+            //FileItem sourceItem = GetDbItemByFileKey(uId, pathInfo.GetFileItemKey<string>());
 
-            //MemoryStream memStream = new MemoryStream();
-            //BinaryFormatter binForm = new BinaryFormatter();
-            //memStream.Write(sourceItem.Data, 0, sourceItem.Data.Length);
-            //memStream.Seek(0, SeekOrigin.Begin);
-            //Object obj = (Object)binForm.Deserialize(memStream);
+            ////MemoryStream memStream = new MemoryStream();
+            ////BinaryFormatter binForm = new BinaryFormatter();
+            ////memStream.Write(sourceItem.Data, 0, sourceItem.Data.Length);
+            ////memStream.Seek(0, SeekOrigin.Begin);
+            ////Object obj = (Object)binForm.Deserialize(memStream);
 
-            //var fs = new FileStream(sourceItem.Name, FileMode.Create, FileAccess.Write);
-            //fs.Write(sourceItem.Data, 0, sourceItem.Data.Length);
+            ////var fs = new FileStream(sourceItem.Name, FileMode.Create, FileAccess.Write);
+            ////fs.Write(sourceItem.Data, 0, sourceItem.Data.Length);
 
-            //FileStream stream = new FileStream(sourceItem.Name, FileMode.);
+            ////FileStream stream = new FileStream(sourceItem.Name, FileMode.);
 
 
-            //MemoryStream memoryStream = new MemoryStream(sourceItem.Data);
-            //var br = new BinaryWriter();
+            ////MemoryStream memoryStream = new MemoryStream(sourceItem.Data);
+            ////var br = new BinaryWriter();
 
-            var ms = new MemoryStream(sourceItem.Data);
-            ms.Flush();
-            ms.Position = 0;
+            //var ms = new MemoryStream(sourceItem.Data);
+            //ms.Flush();
+            //ms.Position = 0;
 
-            StreamReader sr = new StreamReader(ms);
-            var  content = sr.ReadToEnd();
+            //StreamReader sr = new StreamReader(ms);
+            //var  content = sr.ReadToEnd();
 
-            return sr.BaseStream;
+            //return sr.BaseStream;
+            return null;
         }
 
         public void MoveUploadedFile(long uId, IFormFile file, string destinationKey)
@@ -164,9 +165,9 @@ namespace CZDMS.Services
             DataContext.SaveChanges();
         }
 
-        public void Remove(long uId, FileItemIdentifier<string> key)
+        public void Remove(long uId, string key)
         {
-            FileItem item = GetDbItemByFileKey(uId, key.Key);
+            FileItem item = GetDbItemByFileKey(uId, key);
             if (item.Id == DbRootItemId)
             {
                 throw new SecurityException("You can't delete the root folder.");
@@ -179,9 +180,9 @@ namespace CZDMS.Services
             file.Delete();
         }
 
-        public void Rename(long uId, FileItemPathInfo key, string newName)
+        public void Rename(long uId, string key, string newName)
         {
-            FileItem item = GetDbItemByFileKey(uId, key.GetFileItemKey<string>());
+            FileItem item = GetDbItemByFileKey(uId, key);
             if (item.ParentId == DbRootItemId)
             {
                 throw new SecurityException("You can't rename the root folder.");

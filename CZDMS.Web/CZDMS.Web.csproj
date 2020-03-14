@@ -34,7 +34,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CZDMS.Db\CZDMS.Db.csproj" />
     <ProjectReference Include="..\CZDMS.Services\CZDMS.Services.csproj" />
-    <PackageReference Include="DevExtreme.AspNet.Core" Version="19.2.6" />
+    <PackageReference Include="DevExtreme.AspNet.Core" Version="20.1.2-alpha-20064-2016" />
     <PackageReference Include="DevExtreme.AspNet.Data" Version="2.5.1" />
   </ItemGroup>
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">

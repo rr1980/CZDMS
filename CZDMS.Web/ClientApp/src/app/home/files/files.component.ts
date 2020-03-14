@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import CustomFileProvider from 'devextreme/ui/file_manager/file_provider/custom';
+import CustomFileSystemProvider from 'devextreme/file_management/custom_provider';
 import { fileItems, PathInfo } from './file.items';
 // import RemoteFileProvider from 'devextreme/ui/file_manager/file_provider/remote';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { tap, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
+import FileSystemItem from 'devextreme/file_management/file_system_item';
+import UploadInfo from 'devextreme/file_management/upload_info';
 
 @Component({
   selector: 'czdms-files',
@@ -14,13 +16,16 @@ import { throwError } from 'rxjs';
 export class FilesComponent implements OnInit {
 
   allowedFileExtensions: string[] = [".pdf"];
-  fileProvider: CustomFileProvider;
+  fileProvider: CustomFileSystemProvider;
   constructor(private http: HttpClient, ) { }
 
   ngOnInit() {
     this.setup();
   }
 
+  onSelectedFileOpened(event){
+    console.debug('onSelectedFileOpened', event);
+  }
 
   setup() {
     // this.fileProvider = new RemoteFileProvider({
@@ -28,10 +33,10 @@ export class FilesComponent implements OnInit {
     // });
 
 
-    this.fileProvider = new CustomFileProvider({
-      getItems: (pathInfo: PathInfo[]) => {
-        console.debug('getItems', pathInfo);
-
+    this.fileProvider = new CustomFileSystemProvider({
+      getItems: (fileSystemItem: FileSystemItem) => {
+        console.debug('getItems', fileSystemItem);
+        // return null;
         // if (!pathInfo.length) {
         //   pathInfo.push({
         //     key: "\\",
@@ -39,14 +44,18 @@ export class FilesComponent implements OnInit {
         //   });
         // }
 
-        return this.http.post('https://localhost:44351/api/DatabaseApi/GetItems', pathInfo, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-          // .pipe(tap(val => console.debug('getItems', val)))
-          .toPromise();
+        return this.http.post('https://localhost:44351/api/DatabaseApi/GetItems', fileSystemItem, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
+          .pipe(tap(val => console.debug('getItems', val)), catchError((err) => {
+            console.debug(err);
+            return throwError({
+              errorId: 0
+            });
+          })).toPromise();
       },
       renameItem: (item, name) => {
         console.debug('renameItem', item, name);
       },
-      createDirectory: (parentDir, name) => {
+      createDirectory: (parentDir: FileSystemItem, name: string) => {
         return this.http.post('https://localhost:44351/api/DatabaseApi/CreateDirectory', { parentDir, name }, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
           .pipe(tap(val => console.debug('createDirectory', val)), catchError((err) => {
             return throwError({
@@ -54,7 +63,7 @@ export class FilesComponent implements OnInit {
             });
           })).toPromise();
       },
-      deleteItem: (item) => {
+      deleteItem: (item: FileSystemItem) => {
         return this.http.post('https://localhost:44351/api/DatabaseApi/DeleteItem', item, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
           .pipe(tap(val => console.debug('deleteItem', val)), catchError((err) => {
             return throwError({
@@ -62,7 +71,7 @@ export class FilesComponent implements OnInit {
             });
           })).toPromise();
       },
-      moveItem: (item, destinationDir) => {
+      moveItem: (item: FileSystemItem, destinationDir: FileSystemItem) => {
         return this.http.post('https://localhost:44351/api/DatabaseApi/MoveItem', { item, destinationDir }, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
           .pipe(tap(val => console.debug('moveItem', val)), catchError((err) => {
             return throwError({
@@ -70,7 +79,7 @@ export class FilesComponent implements OnInit {
             });
           })).toPromise();
       },
-      copyItem: (item, destinationDir) => {
+      copyItem: (item: FileSystemItem, destinationDir:FileSystemItem) => {
         return this.http.post('https://localhost:44351/api/DatabaseApi/CopyItem', { item, destinationDir }, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
           .pipe(tap(val => console.debug('copyItem',val)), catchError((err) => {
             return throwError({
@@ -78,22 +87,23 @@ export class FilesComponent implements OnInit {
             });
           })).toPromise();
       },
-      uploadFileChunk: (fileData, chunksInfo, destinationDir) => {
-        const formData: FormData = new FormData();
-        formData.append('file', fileData, fileData.name);
-        formData.append('destinationDir', destinationDir.key.toString());
+      uploadFileChunk: (fileData: File, uploadInfo: UploadInfo) => {
+        // const formData: FormData = new FormData();
+        // formData.append('file', fileData, fileData.name);
+        // formData.append('destinationDir', destinationDir.key.toString());
 
-        return this.http.post('https://localhost:44351/api/DatabaseApi/UploadFileChunk', formData)
-          .pipe(tap(val => console.debug('uploadFileChunk',val)), catchError((err) => {
-            return throwError({
-              errorId: 0
-            });
-          })).toPromise();
+        return Promise.resolve(null);
+        // return this.http.post('https://localhost:44351/api/DatabaseApi/UploadFileChunk', formData)
+        //   .pipe(tap(val => console.debug('uploadFileChunk',val)), catchError((err) => {
+        //     return throwError({
+        //       errorId: 0
+        //     });
+        //   })).toPromise();
       },
-      abortFileUpload: (fileData, chunksInfo, destinationDir) => {
-        console.debug('abortFileUpload', fileData, chunksInfo, destinationDir);
+      abortFileUpload: (fileData: File, uploadInfo: UploadInfo) => {
+        console.debug('abortFileUpload', fileData, uploadInfo);
       },
-      uploadChunkSize: 1048576000
+      // uploadChunkSize: 1048576000
     });
   }
 
