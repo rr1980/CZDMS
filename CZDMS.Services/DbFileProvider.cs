@@ -15,7 +15,6 @@ namespace CZDMS.Services
     public class DbFileProvider 
     {
         const int DbRootItemId = -1;
-        static readonly char[] PossibleDirectorySeparators = { '\\', '/' };
         FileDbContext DataContext { get; }
         public DbFileProvider(FileDbContext _context)
         {
@@ -26,26 +25,29 @@ namespace CZDMS.Services
         {
             FileItem sourceItem = GetDbItemByFileKey(uId, sourceKey.Key);
             FileItem targetItem = GetDbItemByFileKey(uId, destinationKey.Key);
+            
             if (targetItem.Id == sourceItem.ParentId)
+            {
                 throw new SecurityException("You can't copy to the same folder.");
+            }
+
             List<FileItem> childItems = DataContext.FileItems.Where(p => p.ParentId == targetItem.Id).ToList();
+
             if (childItems.Select(i => i.Name).Contains(sourceItem.Name))
+            {
                 throw new SecurityException("The folder contains an item with the same name.");
+            }
+
             CopyFolderInternal(sourceItem, targetItem);
         }
 
         public void CreateDirectory(long uId, FileItemIdentifier<string> rootKey, string name)
         {
-            //if (rootKey.Key.StartsWith("__"))
-            //{
-            //    rootKey.Key = "\\";
-            //}
-
             FileItem parentItem = GetDbItemByFileKey(uId, rootKey?.Key);
             FileItem newFolderItem = new FileItem
             {
                 Name = name,
-                Key = name,
+                Key = Guid.NewGuid().ToString(),
                 ParentId = parentItem != null ? parentItem.Id : DbRootItemId,
                 IsFolder = true,
                 LastWriteTime = DateTime.Now,
@@ -57,11 +59,6 @@ namespace CZDMS.Services
 
         public IList<IClientFileSystemItem> GetDirectoryContents(long uId, FileItemIdentifier<string> dirKey)
         {
-            //if(dirKey == null)
-            //{
-            //    var user = DataContext.Users.First(p => p.Id == uId);
-            //}
-
             FileItem parent = GetDbItemByFileKey(uId, dirKey?.Key);
             if (parent != null)
             {
@@ -81,7 +78,6 @@ namespace CZDMS.Services
                 CreateDirectory(uId, dirKey, user.Username);
 
                 return GetDirectoryContents(uId, dirKey);
-                //throw new SecurityException("No Parent folder.");
             }
         }
 
@@ -139,7 +135,7 @@ namespace CZDMS.Services
             FileItem item = new FileItem
             {
                 Name = file.FileName,
-                Key = destinationKey + "\\"+file.FileName,
+                Key = Guid.NewGuid().ToString(),
                 ParentId = parentItem.Id,
                 Data = data,
                 IsFolder = false,
@@ -177,7 +173,7 @@ namespace CZDMS.Services
         {
             FileItem copyItem = new FileItem
             {
-                Key = sourceItem.Key,       //?????
+                Key = Guid.NewGuid().ToString(),
                 Data = sourceItem.Data,
                 LastWriteTime = DateTime.Now,
                 IsFolder = sourceItem.IsFolder,
@@ -226,41 +222,18 @@ namespace CZDMS.Services
 
         FileItem GetDbItemByFileKey(long uId, string fileKey)
         {
-            if (string.IsNullOrEmpty(fileKey) || fileKey == "\\")
+            if (string.IsNullOrEmpty(fileKey) || fileKey == "\\" || fileKey.StartsWith("__"))
             {
                 return DataContext.FileItems.Where(p => p.OwnerId == uId && p.ParentId == DbRootItemId).FirstOrDefault();
             }
 
-
-            string[] pathPFileItem = fileKey.Split(PossibleDirectorySeparators);
-            var query = DataContext.FileItems.Where(item => item.OwnerId == uId && item.Name == pathPFileItem.Last());
-            //var childItemsQuery = DataContext.FileItems.Where(item => item.OwnerId == uId && item.ParentId != null);
-            //for (int i = 1; i < pathPFileItem.Length; i++)
-            //{
-            //    string itemName = pathPFileItem[i];
-            //    query = childItemsQuery.
-            //     Join(query,
-            //      childItem => childItem.ParentId,
-            //      parentItem => parentItem.Id,
-            //      (childItem, parentItem) => childItem).
-            //     Where(item => item.Key == itemName);
-            //}
-
-            var result = query.FirstOrDefault();
-
-            if (result == null)
-            {
-                result = DataContext.FileItems.Where(p => p.OwnerId == uId && p.ParentId == DbRootItemId).FirstOrDefault();
-            }
-
-            return result;
+            return DataContext.FileItems.FirstOrDefault(item => item.OwnerId == uId && item.Key == fileKey);
         }
 
         DbFileSystemItem CreateDbFileSystemItem(FileItem dbItem)
         {
             return new DbFileSystemItem
             {
-                //Id = dbItem.Id,
                 Key = dbItem.Key,
                 ParentId = dbItem.ParentId == null ? DbRootItemId : (int)dbItem.ParentId,
                 Name = dbItem.Name,
