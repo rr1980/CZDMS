@@ -1,3 +1,20 @@
-<p>
-  find works!
-</p>
+<dx-data-grid id="gridContainer" [dataSource]="dataSource" [filterValue]="filterValue" [showBorders]="true">
+
+    <dxo-filter-panel [visible]="true"></dxo-filter-panel>
+
+    <dxo-filter-builder></dxo-filter-builder>
+    
+    <dxo-filter-builder-popup [position]="popupPosition"> </dxo-filter-builder-popup>
+    <dxo-filter-row [visible]="true"></dxo-filter-row>
+    <dxo-header-filter [visible]="true"></dxo-header-filter>
+    <dxo-scrolling mode="infinite"></dxo-scrolling>
+
+    <dxi-column dataField="name" dataType="string"></dxi-column>
+    <dxi-column dataField="type" caption="Type">
+        <dxo-lookup [dataSource]="typelookupData">
+        </dxo-lookup>
+    </dxi-column>
+    <dxi-column dataField="size" dataType="number"></dxi-column>
+    <dxi-column dataField="dateModified" dataType="date"></dxi-column>
+
+</dx-data-grid>

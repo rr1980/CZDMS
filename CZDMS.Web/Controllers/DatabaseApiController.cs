@@ -1,6 +1,8 @@
 ﻿using CZDMS.Db;
 using CZDMS.Models;
 using CZDMS.Services;
+using DevExtreme.AspNet.Data;
+using DevExtreme.AspNet.Mvc;
 using DevExtreme.AspNet.Mvc.FileManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -12,6 +14,8 @@ using System.Security.Claims;
 
 namespace CZDMS.Web.Controllers
 {
+
+
     public class FileManagerItem
     {
         public string Name { get; set; }
@@ -53,16 +57,16 @@ namespace CZDMS.Web.Controllers
         {
             get
             {
-                return new DbFileProvider(FileDbContext);
+                return new DbFileProvider(FileDbContext, webHostEnvironment.WebRootPath);
             }
         }
 
-        IWebHostEnvironment HostingEnvironment;
+        IWebHostEnvironment webHostEnvironment;
         FileDbContext FileDbContext;
-        public DatabaseApiController(FileDbContext context, IWebHostEnvironment hostingEnvironment)
+        public DatabaseApiController(FileDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             FileDbContext = context;
-            HostingEnvironment = hostingEnvironment;
+            this.webHostEnvironment = webHostEnvironment;
         }
 
         [HttpPost]
@@ -121,10 +125,16 @@ namespace CZDMS.Web.Controllers
         [Route("Download")]
         public FileResult Download([FromBody]DbFileSystemItem[] items)
         {
-            var data = dbFileProvider.GetItemData(UserId, items);
-            return File(data, System.Net.Mime.MediaTypeNames.Application.Octet, items[0].Name);
+            var dataResponse = dbFileProvider.GetForDownload(UserId, items);
+            return File(dataResponse.Data, System.Net.Mime.MediaTypeNames.Application.Octet, dataResponse.FileName);
         }
 
+        [HttpGet]
+        [Route("Recherche")]
+        public object Recherche(DataSourceLoadOptions loadOptions)
+        {
+            return DataSourceLoader.Load(dbFileProvider.GetAllForRecherche(UserId), loadOptions);
+        }
         //IClientFileSystemItem
 
         //public IActionResult FileSystem(FileSystemCommand command, string arguments)
