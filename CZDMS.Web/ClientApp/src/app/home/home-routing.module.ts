@@ -28,4 +28,4 @@ const routes: Routes = [
 export class HomeRoutingModule { }
 
 
-export const routedComponents = [HomeComponent, FilesComponent, FindComponent]
+export const routedComponents = [HomeComponent, FilesComponent, FindComponent];
