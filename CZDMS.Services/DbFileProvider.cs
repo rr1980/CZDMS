@@ -194,16 +194,8 @@ namespace CZDMS.Services
         }
 
 
-        public DownloadItemRequest GetItemData(long uId, DbFileSystemItem[] items)
+        public DownloadItemRequest GetForDownload(long uId, DbFileSystemItem[] items)
         {
-
-            //foreach (var item in items)
-            //{
-            //    FileItem firstItem = GetDbItemByFileKey(uId, item.Key.ToString());
-
-            //}
-
-
             FileItem firstItem = GetDbItemByFileKey(uId, items[0].Key.ToString());
 
             if (items.Length == 1 && !firstItem.IsFolder.Value)

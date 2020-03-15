@@ -20,6 +20,7 @@ export class FilesComponent implements OnInit {
   fileManagerComponent: any;
 
   contextMenu: any;
+  toolbar: any;
 
   constructor(private http: HttpClient, private authService: AuthService) {
     this.onDownloadClick = this.onDownloadClick.bind(this);
@@ -112,8 +113,22 @@ export class FilesComponent implements OnInit {
       ]
     };
 
+    this.toolbar = {
+      fileSelectionItems: [
+        'move', 'copy', 'rename', 'separator', 'delete', 'refresh', 'clear',
+        {
+          widget: "dxButton",
+          options: {
+            text: "Download",
+            icon: "download"
+          },
+          location: "before",
+          onClick: this.onDownloadClick
+        }
+      ]
+    };
+
     this.fileProvider = new CustomFileProvider({
-      // getItemsContent:
       getItems: (pathInfo: PathInfo[]) => {
         return this.post_request('GetItems', pathInfo).toPromise();
       },
@@ -141,48 +156,6 @@ export class FilesComponent implements OnInit {
       },
       abortFileUpload: (fileData, chunksInfo, destinationDir) => {
         console.debug('abortFileUpload', fileData, chunksInfo, destinationDir);
-      },
-      downloadItems: (items: any[]) => {
-        const options = {
-          headers: new HttpHeaders(
-            {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + this.authService.getToken()
-            }
-          ),
-          responseType: 'blob' as 'json'
-        };
-
-        const blob = this.http.post<Blob>('https://localhost:44351/api/DatabaseApi/Download', items, options).pipe(
-          catchError((err) => {
-            const msg = err.error?.message || "Error";
-            notify(msg, 'error', 5000);
-            return throwError({
-              errorId: 0
-            });
-          })
-        ).toPromise();
-
-        blob.then(responseBlob => {
-          if (navigator.appVersion.toString().indexOf('.NET') > 0) {
-            window.navigator.msSaveBlob(responseBlob, items[0].name);
-          }
-          else {
-            var url = URL.createObjectURL(responseBlob);
-            var link = document.createElement("a");
-            link.href = url;
-            link.download = items[0].name;
-            document.body.appendChild(link);
-            link.click();
-            var self = this;
-            setTimeout(() => {
-              document.body.removeChild(link);
-              window.URL.revokeObjectURL(url);
-            }, 1000);
-          }
-        }).catch(response => {
-          console.log("catch", response);
-        });
       },
       uploadChunkSize: 1048576000
     });

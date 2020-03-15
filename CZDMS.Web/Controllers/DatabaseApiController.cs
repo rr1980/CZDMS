@@ -123,7 +123,7 @@ namespace CZDMS.Web.Controllers
         [Route("Download")]
         public FileResult Download([FromBody]DbFileSystemItem[] items)
         {
-            var dataResponse = dbFileProvider.GetItemData(UserId, items);
+            var dataResponse = dbFileProvider.GetForDownload(UserId, items);
             return File(dataResponse.Data, System.Net.Mime.MediaTypeNames.Application.Octet, dataResponse.FileName);
         }
 
