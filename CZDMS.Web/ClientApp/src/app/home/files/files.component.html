@@ -1,4 +1,4 @@
 <dx-file-manager id="fileManager" (onInitialized)="onFileManagerInitialized($event)" rootFolderName="root" [toolbar]="toolbar" [contextMenu]="contextMenu" [fileProvider]="fileProvider" currentPath="root">
-  <dxo-permissions create="true" copy="true" move="true" remove="true" rename="true" upload="true" download="true">
+  <dxo-permissions [create]="permissions.create" [copy]="permissions.copy" [move]="permissions.move" [remove]="permissions.remove" [rename]="permissions.rename" [upload]="permissions.upload" [download]="permissions.download">
   </dxo-permissions>
 </dx-file-manager> 
