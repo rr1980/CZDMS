@@ -58,7 +58,7 @@ export class FilesComponent implements OnInit {
       responseType: 'blob' as 'json'
     };
 
-    const blob = this.http.post<Blob>('https://localhost:44351/api/DatabaseApi/Download', selctedItems, options).pipe(
+    const blob = this.http.post<Blob>('api/DatabaseApi/Download', selctedItems, options).pipe(
       catchError((err) => {
         const msg = err.error?.message || "Error";
         notify(msg, 'error', 5000);
@@ -91,7 +91,7 @@ export class FilesComponent implements OnInit {
   }
 
   post_request(command: string, data: any, options: any = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) }) {
-    return this.http.post('https://localhost:44351/api/DatabaseApi/' + command, data, options).pipe(
+    return this.http.post('api/DatabaseApi/' + command, data, options).pipe(
       catchError((err) => {
         const msg = err.error?.message || "Error";
         notify(msg, 'error', 5000);

@@ -14,8 +14,8 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
   }
 
-  onClickLogin(l: string) {
-    this.authService.login('rr1980' + l, '12003').subscribe((r) => {
+  onClickLogin(user: string) {
+    this.authService.login(user, '12003').subscribe((r) => {
       if (r) {
         console.debug('Login', true);
         this.router.navigate(['home']);

@@ -1,4 +1,5 @@
 using CZDMS.Db;
+using CZDMS.Db.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -11,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Linq;
 using System.Text;
 
 namespace CZDMS.Web
@@ -115,6 +117,64 @@ namespace CZDMS.Web
                     spa.UseProxyToSpaDevelopmentServer("http://localhost:4200");
                 }
             });
+
+            SeedDB(app);
+        }
+
+        private void SeedDB(IApplicationBuilder app)
+        {
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+
+                var context = services.GetRequiredService<FileDbContext>();
+
+                context.Database.EnsureCreated();
+
+                if (!context.Users.Any())
+                {
+                    context.Add(new User
+                    {
+                        Name = "Riesner",
+                        Vorname = "Rene",
+                        Username = "rr1980",
+                        Password = "12003"
+                    });
+
+                    context.Add(new User
+                    {
+                        Name = "Stock",
+                        Vorname = "Patrick",
+                        Username = "pStock",
+                        Password = "12003"
+                    });
+
+                    context.SaveChanges();
+                }
+
+                if (!context.FileItems.Any())
+                {
+                    context.Add(new FileItem
+                    {
+                        Name = "root",
+                        Key = "root",
+                        ParentId = -1,
+                        IsFolder = true
+                    });
+
+                    context.SaveChanges();
+
+                    context.Add(new FileItem
+                    {
+                        Name = "public",
+                        Key = "public",
+                        ParentId = context.FileItems.FirstOrDefault(x => x.Name == "root").Id,
+                        IsFolder = true
+                    });
+
+                    context.SaveChanges();
+                }
+            }
         }
     }
 }

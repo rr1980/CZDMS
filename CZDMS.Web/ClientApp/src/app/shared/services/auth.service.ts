@@ -36,8 +36,7 @@ export class AuthService {
   }
 
   public login(username: string, password: string): Observable<any> {
-    // return this.http.post('https://localhost:44351/api/Token', { username: username, password: password }, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-    return this.http.post('https://localhost:44351/api/Token', { username: username, password: password }, { responseType: 'text' as 'json' })
+    return this.http.post('api/Token', { username: username, password: password }, { responseType: 'text' as 'json' })
       .pipe(tap(response => {
         this.setToken(response);
       }));
