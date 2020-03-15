@@ -6,8 +6,6 @@ namespace CZDMS.Models
 {
     public class DbFileSystemItem : IClientFileSystemItem
     {
-
-        //public object Id { get; set; }
         public object Key { get; set; }
         public long ParentId { get; set; }
         public string Name { get; set; }

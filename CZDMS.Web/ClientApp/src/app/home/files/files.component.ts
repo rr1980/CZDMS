@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import CustomFileProvider from 'devextreme/ui/file_manager/file_provider/custom';
 import { fileItems, PathInfo } from './file.items';
-// import RemoteFileProvider from 'devextreme/ui/file_manager/file_provider/remote';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { tap, catchError } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
+import notify from 'devextreme/ui/notify';
+import { AuthService } from 'src/app/shared/services/auth.service';
 
 @Component({
   selector: 'czdms-files',
@@ -15,83 +16,97 @@ export class FilesComponent implements OnInit {
 
   allowedFileExtensions: string[] = [".pdf"];
   fileProvider: CustomFileProvider;
-  constructor(private http: HttpClient, ) { }
+  constructor(private http: HttpClient, private authService: AuthService) { }
 
   ngOnInit() {
     this.setup();
   }
 
+  post_request(command: string, data: any, options: any = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) }) {
+    return this.http.post('https://localhost:44351/api/DatabaseApi/' + command, data, options).pipe(
+      catchError((err) => {
+        const msg = err.error?.message || "Error";
+        notify(msg, 'error', 5000);
+        return throwError({
+          errorId: 0
+        });
+      })
+    );
+  }
 
   setup() {
-    // this.fileProvider = new RemoteFileProvider({
-    //   endpointUrl: "https://localhost:44351/api/DatabaseApi"
-    // });
-
-
     this.fileProvider = new CustomFileProvider({
       getItems: (pathInfo: PathInfo[]) => {
-        console.debug('getItems', pathInfo);
-
-        // if (!pathInfo.length) {
-        //   pathInfo.push({
-        //     key: "\\",
-        //     name: null
-        //   });
-        // }
-
-        return this.http.post('https://localhost:44351/api/DatabaseApi/GetItems', pathInfo, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-          // .pipe(tap(val => console.debug('getItems', val)))
-          .toPromise();
+        return this.post_request('GetItems', pathInfo).toPromise();
       },
       renameItem: (item, name) => {
-        console.debug('renameItem', item, name);
+        return this.post_request('RenameItem', { parentDir: item, name }).toPromise();
       },
       createDirectory: (parentDir, name) => {
-        return this.http.post('https://localhost:44351/api/DatabaseApi/CreateDirectory', { parentDir, name }, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-          .pipe(tap(val => console.debug('createDirectory', val)), catchError((err) => {
-            return throwError({
-              errorId: 0
-            });
-          })).toPromise();
+        return this.post_request('CreateDirectory', { parentDir, name }).toPromise();
       },
       deleteItem: (item) => {
-        return this.http.post('https://localhost:44351/api/DatabaseApi/DeleteItem', item, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-          .pipe(tap(val => console.debug('deleteItem', val)), catchError((err) => {
-            return throwError({
-              errorId: 0
-            });
-          })).toPromise();
+        return this.post_request('DeleteItem', item).toPromise();
       },
       moveItem: (item, destinationDir) => {
-        return this.http.post('https://localhost:44351/api/DatabaseApi/MoveItem', { item, destinationDir }, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-          .pipe(tap(val => console.debug('moveItem', val)), catchError((err) => {
-            return throwError({
-              errorId: 0
-            });
-          })).toPromise();
+        return this.post_request('MoveItem', { item, destinationDir }).toPromise();
       },
       copyItem: (item, destinationDir) => {
-        return this.http.post('https://localhost:44351/api/DatabaseApi/CopyItem', { item, destinationDir }, { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) })
-          .pipe(tap(val => console.debug('copyItem',val)), catchError((err) => {
-            return throwError({
-              errorId: 0
-            });
-          })).toPromise();
+        return this.post_request('CopyItem', { item, destinationDir }).toPromise();
       },
       uploadFileChunk: (fileData, chunksInfo, destinationDir) => {
         const formData: FormData = new FormData();
         formData.append('file', fileData, fileData.name);
         formData.append('destinationDir', destinationDir.key.toString());
 
-        return this.http.post('https://localhost:44351/api/DatabaseApi/UploadFileChunk', formData)
-          .pipe(tap(val => console.debug('uploadFileChunk',val)), catchError((err) => {
-            return throwError({
-              errorId: 0
-            });
-          })).toPromise();
+        return this.post_request('UploadFileChunk', formData).toPromise();
       },
       abortFileUpload: (fileData, chunksInfo, destinationDir) => {
         console.debug('abortFileUpload', fileData, chunksInfo, destinationDir);
+      },
+      downloadItems: (items: any[]) => {
+        console.debug('Download', items);
+
+        const options = {
+          headers: new HttpHeaders(
+            {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + this.authService.getToken()
+            }
+          ),
+          responseType: 'blob' as 'json'
+        };
+
+        const blob = this.http.post<Blob>('https://localhost:44351/api/DatabaseApi/Download', items, options).pipe(
+          catchError((err) => {
+            const msg = err.error?.message || "Error";
+            notify(msg, 'error', 5000);
+            return throwError({
+              errorId: 0
+            });
+          })
+        ).toPromise();
+
+        blob.then(responseBlob => {
+          if (navigator.appVersion.toString().indexOf('.NET') > 0) {
+            window.navigator.msSaveBlob(responseBlob, items[0].name);
+          }
+          else {
+            var url = URL.createObjectURL(responseBlob);
+            var link = document.createElement("a");
+            link.href = url;
+            link.download = items[0].name;
+            document.body.appendChild(link);
+            link.click();
+            var self = this;
+            setTimeout(() => {
+              document.body.removeChild(link);
+              window.URL.revokeObjectURL(url);
+            }, 1000);
+          }
+        }).catch(response => {
+          console.log("catch", response);
+        });
       },
       uploadChunkSize: 1048576000
     });
