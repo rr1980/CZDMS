@@ -2,6 +2,7 @@
 
 namespace CZDMS.Models
 {
+
     public class UserLoginModel
     {
         [Required]

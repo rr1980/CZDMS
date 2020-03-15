@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security;
+using Microsoft.Extensions.Hosting;
+using System.IO.Compression;
 
 namespace CZDMS.Services
 {
@@ -15,9 +17,12 @@ namespace CZDMS.Services
     {
         const int DbRootItemId = -1;
         FileDbContext DataContext { get; }
-        public DbFileProvider(FileDbContext _context)
+        string webRootPath;
+
+        public DbFileProvider(FileDbContext _context, string webRootPath)
         {
             DataContext = _context;
+            this.webRootPath = webRootPath;
         }
 
         public IList<IClientFileSystemItem> GetDirectoryContents(long uId, string dirKey)
@@ -120,13 +125,6 @@ namespace CZDMS.Services
             DataContext.SaveChanges();
         }
 
-        public byte[] GetItemData(long uId, DbFileSystemItem[] items)
-        {
-
-            FileItem item = GetDbItemByFileKey(uId, items[0].Key.ToString());
-            return item.Data;
-        }
-
         public void MoveUploadedFile(long uId, IFormFile file, string destinationKey)
         {
             if (destinationKey.StartsWith("__") || destinationKey == "root")
@@ -193,6 +191,73 @@ namespace CZDMS.Services
             }
             DataContext.FileItems.Find(item.Id).Name = newName;
             DataContext.SaveChanges();
+        }
+
+
+        public DownloadItemRequest GetItemData(long uId, DbFileSystemItem[] items)
+        {
+
+            //foreach (var item in items)
+            //{
+            //    FileItem firstItem = GetDbItemByFileKey(uId, item.Key.ToString());
+
+            //}
+
+
+            FileItem firstItem = GetDbItemByFileKey(uId, items[0].Key.ToString());
+
+            if (items.Length == 1 && !firstItem.IsFolder.Value)
+            {
+                return new DownloadItemRequest
+                {
+                    Data = firstItem.Data,
+                    FileName = firstItem.Name
+                };
+            }
+            else
+            {
+                var tmpPath = Path.Combine(webRootPath, "tmp", Guid.NewGuid().ToString());
+
+                foreach (var item in items)
+                {
+                    FileItem _item = GetDbItemByFileKey(uId, item.Key.ToString());
+
+                    MakeFiles(uId, Path.Combine(tmpPath, _item.Name), _item.Id);
+                }
+
+
+                var zipName = Guid.NewGuid().ToString() + ".zip";
+
+                ZipFile.CreateFromDirectory(tmpPath, Path.Combine(webRootPath, "tmp", zipName));
+
+                var result = new DownloadItemRequest
+                {
+                    Data = File.ReadAllBytes(Path.Combine(webRootPath, "tmp", zipName)),
+                    FileName = firstItem.Name + ".zip"
+                };
+
+                File.Delete(Path.Combine(webRootPath, "tmp", zipName));
+                Directory.Delete(tmpPath, true);
+                return result;
+            }
+        }
+
+        private void MakeFiles(long uId, string path, long parentId)
+        {
+            Directory.CreateDirectory(path);
+
+            var all = DataContext.FileItems.Where(item => (item.OwnerId == uId || item.OwnerId == null) && item.ParentId == parentId);
+
+
+            foreach (var file in all.Where(x => !x.IsFolder.Value))
+            {
+                File.WriteAllBytes(Path.Combine(path, file.Name), file.Data);
+            }
+
+            foreach (var dir in all.Where(x => x.IsFolder.Value))
+            {
+                MakeFiles(uId, Path.Combine(path, dir.Name), dir.Id);
+            }
         }
 
         #region privates

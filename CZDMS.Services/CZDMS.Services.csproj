@@ -7,7 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CZDMS.Db\CZDMS.Db.csproj" />
     <ProjectReference Include="..\CZDMS.Models\CZDMS.Models.csproj" />
-    <PackageReference Include="DevExtreme.AspNet.Core" Version="19.2.6" />
+    <PackageReference Include="DevExtreme.AspNet.Core" Version="19.2.6" /> 
   </ItemGroup>
   
 </Project>

@@ -6,6 +6,7 @@ import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import notify from 'devextreme/ui/notify';
 import { AuthService } from 'src/app/shared/services/auth.service';
+// import { DxFileManagerComponent } from 'devextreme-angular/ui/file-manager';
 
 @Component({
   selector: 'czdms-files',
@@ -16,10 +17,75 @@ export class FilesComponent implements OnInit {
 
   allowedFileExtensions: string[] = [".pdf"];
   fileProvider: CustomFileProvider;
-  constructor(private http: HttpClient, private authService: AuthService) { }
+  fileManagerComponent: any;
+
+  contextMenu: any;
+
+  constructor(private http: HttpClient, private authService: AuthService) {
+    this.onDownloadClick = this.onDownloadClick.bind(this);
+  }
 
   ngOnInit() {
     this.setup();
+  }
+
+  onFileManagerInitialized(event) {
+    this.fileManagerComponent = event.component;
+  }
+
+  onDownloadClick(e) {
+    const selctedItems = this.fileManagerComponent.getSelectedItems() as any[];
+    console.debug(selctedItems);
+
+
+    const isZip = selctedItems.length > 1 || selctedItems[0].isDirectory;
+    const fileName = isZip ? selctedItems[0].name + ".zip" : selctedItems[0].name;
+
+    const options = {
+      headers: new HttpHeaders(
+        {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.authService.getToken()
+        }
+      ),
+      responseType: 'blob' as 'json'
+    };
+
+    const blob = this.http.post<Blob>('https://localhost:44351/api/DatabaseApi/Download', selctedItems, options).pipe(
+      catchError((err) => {
+        const msg = err.error?.message || "Error";
+        notify(msg, 'error', 5000);
+        return throwError({
+          errorId: 0
+        });
+      })
+    ).toPromise();
+
+    blob.then(responseBlob => {
+      if (navigator.appVersion.toString().indexOf('.NET') > 0) {
+        window.navigator.msSaveBlob(responseBlob, fileName);
+      }
+      else {
+        var url = URL.createObjectURL(responseBlob);
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        var self = this;
+        setTimeout(() => {
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        }, 1000);
+      }
+    }).catch(response => {
+      console.log("catch", response);
+    });
+
+
+
+
+
   }
 
   post_request(command: string, data: any, options: any = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) }) {
@@ -35,7 +101,19 @@ export class FilesComponent implements OnInit {
   }
 
   setup() {
+    this.contextMenu = {
+      items: [
+        'create', 'upload', 'rename', 'move', 'copy', 'delete', 'refresh',
+        {
+          text: 'Download',
+          icon: 'download',
+          onClick: this.onDownloadClick
+        }
+      ]
+    };
+
     this.fileProvider = new CustomFileProvider({
+      // getItemsContent:
       getItems: (pathInfo: PathInfo[]) => {
         return this.post_request('GetItems', pathInfo).toPromise();
       },
@@ -59,14 +137,12 @@ export class FilesComponent implements OnInit {
         formData.append('file', fileData, fileData.name);
         formData.append('destinationDir', destinationDir.key.toString());
 
-        return this.post_request('UploadFileChunk', formData).toPromise();
+        return this.post_request('UploadFileChunk', formData, {}).toPromise();
       },
       abortFileUpload: (fileData, chunksInfo, destinationDir) => {
         console.debug('abortFileUpload', fileData, chunksInfo, destinationDir);
       },
       downloadItems: (items: any[]) => {
-        console.debug('Download', items);
-
         const options = {
           headers: new HttpHeaders(
             {
