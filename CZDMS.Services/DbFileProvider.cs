@@ -7,12 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Security;
 
 namespace CZDMS.Services
 {
-    public class DbFileProvider 
+    public class DbFileProvider
     {
         const int DbRootItemId = -1;
         FileDbContext DataContext { get; }
@@ -21,29 +20,49 @@ namespace CZDMS.Services
             DataContext = _context;
         }
 
-        public void Copy(long uId, FileItemIdentifier<string> sourceKey, FileItemIdentifier<string> destinationKey)
+        public IList<IClientFileSystemItem> GetDirectoryContents(long uId, string dirKey)
         {
-            FileItem sourceItem = GetDbItemByFileKey(uId, sourceKey.Key);
-            FileItem targetItem = GetDbItemByFileKey(uId, destinationKey.Key);
-            
-            if (targetItem.Id == sourceItem.ParentId)
+            FileItem parent = null;
+            if (string.IsNullOrEmpty(dirKey))
             {
-                throw new SecurityException("You can't copy to the same folder.");
+                var user = DataContext.Users.First(p => p.Id == uId);
+                if (!DataContext.FileItems.Any(p => p.OwnerId == uId && p.IsFolder.Value && p.Name == user.Username))
+                {
+                    FileItem parentItem = GetDbItemByFileKey(uId, "root");
+                    FileItem newFolderItem = new FileItem
+                    {
+                        Name = user.Username,
+                        Key = Guid.NewGuid().ToString(),
+                        ParentId = parentItem != null ? parentItem.Id : DbRootItemId,
+                        IsFolder = true,
+                        LastWriteTime = DateTime.Now,
+                        OwnerId = uId
+                    };
+                    DataContext.FileItems.Add(newFolderItem);
+                    DataContext.SaveChanges();
+                }
+
+                parent = GetDbItemByFileKey(uId, "root");
+            }
+            else
+            {
+                parent = GetDbItemByFileKey(uId, dirKey);
             }
 
-            List<FileItem> childItems = DataContext.FileItems.Where(p => p.ParentId == targetItem.Id).ToList();
-
-            if (childItems.Select(i => i.Name).Contains(sourceItem.Name))
-            {
-                throw new SecurityException("The folder contains an item with the same name.");
-            }
-
-            CopyFolderInternal(sourceItem, targetItem);
+            return DataContext.FileItems
+                 .Where(p => p.ParentId == parent.Id && (p.OwnerId == uId || p.OwnerId == null))
+                 .Select(CreateDbFileSystemItem)
+                 .ToList<IClientFileSystemItem>();
         }
 
-        public void CreateDirectory(long uId, FileItemIdentifier<string> rootKey, string name)
+        public FileItem CreateDirectory(long uId, string rootKey, string name)
         {
-            FileItem parentItem = GetDbItemByFileKey(uId, rootKey?.Key);
+            if (rootKey.StartsWith("__") || rootKey == "root")
+            {
+                throw new SecurityException("You can't create directory in the root folder.");
+            }
+
+            FileItem parentItem = GetDbItemByFileKey(uId, rootKey);
             FileItem newFolderItem = new FileItem
             {
                 Name = name,
@@ -51,80 +70,70 @@ namespace CZDMS.Services
                 ParentId = parentItem != null ? parentItem.Id : DbRootItemId,
                 IsFolder = true,
                 LastWriteTime = DateTime.Now,
-                OwnerId = uId
+                OwnerId = (parentItem.OwnerId == null && parentItem.Key != "root") ? null : (long?)uId
             };
             DataContext.FileItems.Add(newFolderItem);
             DataContext.SaveChanges();
+
+            return newFolderItem;
         }
 
-        public IList<IClientFileSystemItem> GetDirectoryContents(long uId, FileItemIdentifier<string> dirKey)
+        public void Copy(long uId, string sourceName, string sourceKey, string destinationKey)
         {
-            FileItem parent = GetDbItemByFileKey(uId, dirKey?.Key);
-            if (parent != null)
-            {
-                return DataContext.FileItems
-                    .Where(p => p.ParentId == parent.Id)
-                    .Select(CreateDbFileSystemItem)
-                    .ToList<IClientFileSystemItem>();
-            }
-            else
-            {
-                if(dirKey== null)
-                {
-                    dirKey = new FileItemIdentifier<string>();
-                }
-                var user = DataContext.Users.First(p => p.Id == uId);
-                
-                CreateDirectory(uId, dirKey, user.Username);
+            var user = DataContext.Users.First(p => p.Id == uId);
 
-                return GetDirectoryContents(uId, dirKey);
+            if (sourceKey.StartsWith("__") || sourceKey == "root" || sourceKey == "public" || sourceName == user.Username)
+            {
+                throw new SecurityException("You can't copy this item.");
             }
+
+            if (destinationKey.StartsWith("__") || destinationKey == "root")
+            {
+                throw new SecurityException("You can't copy to the root folder.");
+            }
+
+            FileItem sourceItem = GetDbItemByFileKey(uId, sourceKey);
+            FileItem targetItem = GetDbItemByFileKey(uId, destinationKey);
+
+            CopyFolderInternal(sourceItem, targetItem);
         }
 
-        public void Move(long uId, FileItemIdentifier<string> sourceKey, FileItemIdentifier<string> destinationKey)
+        public void Move(long uId, string sourceName, string sourceKey, string destinationKey)
         {
-            FileItem sourceItem = GetDbItemByFileKey(uId, sourceKey.Key);
-            FileItem targetItem = GetDbItemByFileKey(uId, destinationKey.Key);
-            if (targetItem.Id == sourceItem.ParentId)
-                throw new SecurityException("You can't copy to the same folder.");
-            List<FileItem> childItems = DataContext.FileItems.Where(p => p.ParentId == targetItem.Id).ToList();
-            if (childItems.Select(i => i.Name).Contains(sourceItem.Name))
-                throw new SecurityException("The folder contains an item with the same name.");
+            var user = DataContext.Users.First(p => p.Id == uId);
+
+            if (sourceKey.StartsWith("__") || sourceKey == "root" || sourceKey == "public" || sourceName == user.Username)
+            {
+                throw new SecurityException("You can't move this item.");
+            }
+
+            if (destinationKey.StartsWith("__") || destinationKey == "root")
+            {
+                throw new SecurityException("You can't move to the root folder.");
+            }
+
+            FileItem sourceItem = GetDbItemByFileKey(uId, sourceKey);
+            FileItem targetItem = GetDbItemByFileKey(uId, destinationKey);
+
             sourceItem.ParentId = targetItem.Id;
+            sourceItem.OwnerId = targetItem.OwnerId;
             DataContext.SaveChanges();
         }
 
-        public Stream GetFileContent(long uId, FileItemPathInfo pathInfo)
+        public byte[] GetItemData(long uId, DbFileSystemItem[] items)
         {
-            FileItem sourceItem = GetDbItemByFileKey(uId, pathInfo.GetFileItemKey<string>());
 
-            //MemoryStream memStream = new MemoryStream();
-            //BinaryFormatter binForm = new BinaryFormatter();
-            //memStream.Write(sourceItem.Data, 0, sourceItem.Data.Length);
-            //memStream.Seek(0, SeekOrigin.Begin);
-            //Object obj = (Object)binForm.Deserialize(memStream);
-
-            //var fs = new FileStream(sourceItem.Name, FileMode.Create, FileAccess.Write);
-            //fs.Write(sourceItem.Data, 0, sourceItem.Data.Length);
-
-            //FileStream stream = new FileStream(sourceItem.Name, FileMode.);
-
-
-            //MemoryStream memoryStream = new MemoryStream(sourceItem.Data);
-            //var br = new BinaryWriter();
-
-            var ms = new MemoryStream(sourceItem.Data);
-            ms.Flush();
-            ms.Position = 0;
-
-            StreamReader sr = new StreamReader(ms);
-            var  content = sr.ReadToEnd();
-
-            return sr.BaseStream;
+            FileItem item = GetDbItemByFileKey(uId, items[0].Key.ToString());
+            return item.Data;
         }
 
         public void MoveUploadedFile(long uId, IFormFile file, string destinationKey)
         {
+            if (destinationKey.StartsWith("__") || destinationKey == "root")
+            {
+                throw new SecurityException("You can't upload to the root folder.");
+            }
+
             byte[] data = new byte[file.Length];
             using (Stream fs = file.OpenReadStream())
             {
@@ -140,17 +149,26 @@ namespace CZDMS.Services
                 Data = data,
                 IsFolder = false,
                 LastWriteTime = DateTime.Now,
-                OwnerId = uId
+                OwnerId = (parentItem.OwnerId == null && parentItem.Key != "root") ? null : (long?)uId
             };
             DataContext.FileItems.Add(item);
             DataContext.SaveChanges();
         }
 
-        public void Remove(long uId, FileItemIdentifier<string> key)
+        public void Remove(long uId, string name, string key)
         {
-            FileItem item = GetDbItemByFileKey(uId, key.Key);
+            var user = DataContext.Users.First(p => p.Id == uId);
+
+            if (key.StartsWith("__") || key == "root" || key == "public" || name == user.Username)
+            {
+                throw new SecurityException("You can't delete this item.");
+            }
+
+            FileItem item = GetDbItemByFileKey(uId, key);
             if (item.Id == DbRootItemId)
+            {
                 throw new SecurityException("You can't delete the root folder.");
+            }
             RemoveInternal(item);
         }
 
@@ -159,11 +177,20 @@ namespace CZDMS.Services
             file.Delete();
         }
 
-        public void Rename(long uId, FileItemPathInfo key, string newName)
+        public void Rename(long uId, string oldName, string key, string newName)
         {
-            FileItem item = GetDbItemByFileKey(uId, key.GetFileItemKey<string>());
+            var user = DataContext.Users.First(p => p.Id == uId);
+
+            if (key.StartsWith("__") || key == "root" || key == "public" || oldName == user.Username)
+            {
+                throw new SecurityException("You can't rename this item.");
+            }
+
+            FileItem item = GetDbItemByFileKey(uId, key);
             if (item.ParentId == DbRootItemId)
+            {
                 throw new SecurityException("You can't rename the root folder.");
+            }
             DataContext.FileItems.Find(item.Id).Name = newName;
             DataContext.SaveChanges();
         }
@@ -179,7 +206,7 @@ namespace CZDMS.Services
                 IsFolder = sourceItem.IsFolder,
                 Name = sourceItem.Name,
                 ParentId = targetItem.Id,
-                OwnerId = sourceItem.OwnerId
+                OwnerId = targetItem.OwnerId
             };
             DataContext.FileItems.Add(copyItem);
             DataContext.SaveChanges();
@@ -222,12 +249,7 @@ namespace CZDMS.Services
 
         FileItem GetDbItemByFileKey(long uId, string fileKey)
         {
-            if (string.IsNullOrEmpty(fileKey) || fileKey == "\\" || fileKey.StartsWith("__"))
-            {
-                return DataContext.FileItems.Where(p => p.OwnerId == uId && p.ParentId == DbRootItemId).FirstOrDefault();
-            }
-
-            return DataContext.FileItems.FirstOrDefault(item => item.OwnerId == uId && item.Key == fileKey);
+            return DataContext.FileItems.FirstOrDefault(item => (item.OwnerId == uId && item.Key == fileKey) || (item.OwnerId == null && item.Key == fileKey));
         }
 
         DbFileSystemItem CreateDbFileSystemItem(FileItem dbItem)

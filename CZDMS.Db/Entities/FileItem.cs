@@ -31,6 +31,6 @@ namespace CZDMS.Db.Entities
         public byte[] Data { get; set; }
         public byte[] SsmaTimeStamp { get; set; }
 
-        public long OwnerId { get; set; }
+        public long? OwnerId { get; set; }
     }
 }

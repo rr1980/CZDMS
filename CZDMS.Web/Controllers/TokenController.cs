@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CZDMS.Db;
 using CZDMS.Db.Entities;
 using CZDMS.Models;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +15,23 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace CZDMS.Web.Controllers
 {
+    [Route("[controller]")]
+    [ApiController]
+    public class ErrorController : ControllerBase
+    {
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Index()
+        {
+            var error = HttpContext.Features.Get<IExceptionHandlerFeature>().Error;
+
+            return BadRequest(new Exception(error.Message));
+            //return View(new ErrorViewModel
+            //{
+            //    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+            //});
+        }
+    }
+
     [Route("api/[controller]")]
     [ApiController]
     public class TokenController : ControllerBase

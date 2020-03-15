@@ -5,10 +5,10 @@ import { tap } from 'rxjs/operators';
 @Injectable()
 export class LogInterceptor implements HttpInterceptor {
   intercept(request: HttpRequest<any>, next: HttpHandler) {
-    console.debug('request', request);
+    // console.debug('request', request);
     return next.handle(request).pipe(
       tap((response) => {
-        console.debug('response', response);
+        // console.debug('response', response);
       })
     );
   }
