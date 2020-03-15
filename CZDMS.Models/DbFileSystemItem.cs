@@ -4,6 +4,16 @@ using System.Collections.Generic;
 
 namespace CZDMS.Models
 {
+    public class DbRechercheFileSystemItem
+    {
+        public long Id { get; set; }
+        public object Key { get; set; }
+        public string Name { get; set; }
+        public DateTime DateModified { get; set; }
+        public string Type { get; set; }
+        public long Size { get; set; }
+    }
+
     public class DbFileSystemItem : IClientFileSystemItem
     {
         public object Key { get; set; }

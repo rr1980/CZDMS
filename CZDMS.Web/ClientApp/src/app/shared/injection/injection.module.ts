@@ -1,11 +1,14 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import { DxFileManagerModule } from 'devextreme-angular/ui/file-manager';
-import { DxButtonModule } from 'devextreme-angular/ui/button';
 import { AuthRouteGuard } from '../guards/auth.guard';
 import { AuthService } from '../services/auth.service';
+
+import { DxFileManagerModule } from 'devextreme-angular/ui/file-manager';
+import { DxButtonModule } from 'devextreme-angular/ui/button';
 import { DxToolbarModule } from 'devextreme-angular/ui/toolbar';
+import { DxDataGridModule } from 'devextreme-angular/ui/data-grid';
+import { DxTagBoxModule } from 'devextreme-angular/ui/tag-box';
 
 
 @NgModule({
@@ -13,14 +16,18 @@ import { DxToolbarModule } from 'devextreme-angular/ui/toolbar';
     CommonModule,
     DxFileManagerModule,
     DxButtonModule,
-    DxToolbarModule
+    DxToolbarModule,
+    DxDataGridModule,
+    DxTagBoxModule
   ],
   declarations: [],
   exports: [
     CommonModule,
     DxFileManagerModule,
     DxButtonModule,
-    DxToolbarModule
+    DxToolbarModule,
+    DxDataGridModule,
+    DxTagBoxModule
   ]
 })
 export class InjectionModule {

@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import CustomFileProvider from 'devextreme/ui/file_manager/file_provider/custom';
-import { fileItems, PathInfo } from './file.items';
+import { PathInfo } from './file.items';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { catchError, timeoutWith } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import notify from 'devextreme/ui/notify';
 import { AuthService } from 'src/app/shared/services/auth.service';
-// import { DxFileManagerComponent } from 'devextreme-angular/ui/file-manager';
 
 @Component({
   selector: 'czdms-files',
@@ -23,7 +22,7 @@ export class FilesComponent implements OnInit {
     rename: true,
     upload: true,
     download: true,
-  }
+  };
 
   allowedFileExtensions: string[] = [".pdf"];
   fileProvider: CustomFileProvider;
@@ -106,7 +105,15 @@ export class FilesComponent implements OnInit {
   setup() {
     this.contextMenu = {
       items: [
-        'create', 'upload', 'rename', 'move', 'copy', 'delete', 'refresh',
+        // {
+        //   text: 'Create',
+        //   icon: 'newfolder',
+        //   // onClick: (e)=>{
+        //   //   console.debug("create");
+        //   // }
+        // },
+        'create',
+        'upload', 'rename', 'move', 'copy', 'delete', 'refresh',
         {
           text: 'Download',
           icon: 'download',
@@ -161,18 +168,5 @@ export class FilesComponent implements OnInit {
       },
       uploadChunkSize: 1048576000
     });
-  }
-
-  getItems(pathInfo: any[]) {
-    const requestPathInfo = pathInfo[pathInfo.length - 1];
-    const parts = requestPathInfo.key.split('/');
-
-    let items = fileItems;
-    for (let index = 0; index < parts.length; index++) {
-      const part = parts[index];
-      items = items.find(x => x.name === part).items;
-    }
-
-    return items;
   }
 }

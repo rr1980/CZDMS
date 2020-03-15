@@ -1,6 +1,8 @@
 ﻿using CZDMS.Db;
 using CZDMS.Models;
 using CZDMS.Services;
+using DevExtreme.AspNet.Data;
+using DevExtreme.AspNet.Mvc;
 using DevExtreme.AspNet.Mvc.FileManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -127,6 +129,12 @@ namespace CZDMS.Web.Controllers
             return File(dataResponse.Data, System.Net.Mime.MediaTypeNames.Application.Octet, dataResponse.FileName);
         }
 
+        [HttpGet]
+        [Route("Recherche")]
+        public object Recherche(DataSourceLoadOptions loadOptions)
+        {
+            return DataSourceLoader.Load(dbFileProvider.GetAllForRecherche(UserId), loadOptions);
+        }
         //IClientFileSystemItem
 
         //public IActionResult FileSystem(FileSystemCommand command, string arguments)

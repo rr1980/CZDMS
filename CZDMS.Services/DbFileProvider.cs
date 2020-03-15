@@ -234,6 +234,17 @@ namespace CZDMS.Services
             }
         }
 
+
+
+        public IEnumerable<DbRechercheFileSystemItem> GetAllForRecherche(long UserId)
+        {
+            return DataContext.FileItems
+                 .Where(p => p.OwnerId == UserId || p.OwnerId == null)
+                 .Select(CreateDbFileSystemItemForRecherche);
+        }
+
+
+        #region privates
         private void MakeFiles(long uId, string path, long parentId)
         {
             Directory.CreateDirectory(path);
@@ -252,7 +263,6 @@ namespace CZDMS.Services
             }
         }
 
-        #region privates
         FileItem copy(FileItem sourceItem, FileItem targetItem)
         {
             FileItem copyItem = new FileItem
@@ -307,6 +317,19 @@ namespace CZDMS.Services
         FileItem GetDbItemByFileKey(long uId, string fileKey)
         {
             return DataContext.FileItems.FirstOrDefault(item => (item.OwnerId == uId && item.Key == fileKey) || (item.OwnerId == null && item.Key == fileKey));
+        }
+
+        DbRechercheFileSystemItem CreateDbFileSystemItemForRecherche(FileItem dbItem)
+        {
+            return new DbRechercheFileSystemItem
+            {
+                Id = dbItem.Id,
+                Key = dbItem.Key,
+                Name = dbItem.Name,
+                DateModified = (DateTime)dbItem.LastWriteTime,
+                Type = ((bool)dbItem.IsFolder) == true ? "Folder" : "File",
+                Size = dbItem.Data == null ? 0 : dbItem.Data.Length,
+            };
         }
 
         DbFileSystemItem CreateDbFileSystemItem(FileItem dbItem)

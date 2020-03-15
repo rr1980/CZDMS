@@ -54,7 +54,9 @@
               "node_modules/devextreme/dist/css/dx.material.teal.light.css",
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              
+            ]
           },
           "configurations": {
             "production": {
